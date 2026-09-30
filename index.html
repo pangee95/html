@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>민원서비스 검색·필터</title>
+
+<style>
+:root {
+  --primary:#2457a7;
+  --primary-dark:#173d78;
+  --bg:#f4f7fb;
+  --card:#fff;
+  --text:#172033;
+  --muted:#64748b;
+  --line:#dbe3ee;
+  --ok:#166534;
+  --no:#9f1239;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.55;
+}
+
+header {
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+  color:white;
+  padding:34px 20px 30px;
+}
+
+.wrap {
+  max-width:1180px;
+  margin:0 auto;
+}
+
+header h1 {
+  margin:0 0 8px;
+  font-size:clamp(25px,4vw,38px);
+  letter-spacing:-1.2px;
+}
+
+header p {
+  margin:0;
+  opacity:.9;
+}
+
+main {
+  padding:22px 16px 48px;
+}
+
+.controls {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 25px rgba(15,23,42,.06);
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:14px;
+  align-items:end;
+}
+
+label {
+  display:block;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+input, select {
+  width:100%;
+  padding:12px 13px;
+  border:1px solid #b9c5d6;
+  border-radius:10px;
+  background:white;
+  font:inherit;
+  color:inherit;
+  outline:none;
+}
+
+input:focus, select:focus {
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(36,87,167,.13);
+}
+
+.resultbar {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  margin:18px 2px 10px;
+  color:var(--muted);
+}
+
+.resultbar strong {
+  color:var(--primary-dark);
+  font-size:1.12rem;
+}
+
+.tablebox {
+  background:white;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 5px 18px rgba(15,23,42,.04);
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+th {
+  text-align:left;
+  background:#edf3fb;
+  padding:13px 12px;
+  font-size:.92rem;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+
+td {
+  padding:13px 12px;
+  border-bottom:1px solid #edf1f5;
+  vertical-align:middle;
+}
+
+tbody tr:hover {
+  background:#f8fbff;
+}
+
+.badge {
+  display:inline-block;
+  padding:3px 9px;
+  border-radius:999px;
+  font-size:.84rem;
+  font-weight:700;
+  background:#eaf2ff;
+  color:var(--primary-dark);
+}
+
+.online {
+  background:#eaf7ee;
+  color:var(--ok);
+}
+
+.offline {
+  background:#fff0f3;
+  color:var(--no);
+}
+
+.empty {
+  text-align:center;
+  padding:34px 16px;
+  color:var(--muted);
+}
+
+footer {
+  color:var(--muted);
+  text-align:center;
+  padding:8px 16px 32px;
+  font-size:.9rem;
+}
+
+/* 모바일 반응형 */
+@media (max-width:760px) {
+  .controls {
+    grid-template-columns:1fr;
+  }
+
+  .resultbar {
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .tablebox {
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    overflow:visible;
+  }
+
+  table, tbody {
+    display:block;
+  }
+
+  thead {
+    display:none;
+  }
+
+  tr {
+    display:block;
+    background:white;
+    border:1px solid var(--line);
+    border-radius:14px;
+    margin-bottom:12px;
+    padding:10px 13px;
+    box-shadow:0 4px 14px rgba(15,23,42,.04);
+  }
+
+  td {
+    display:grid;
+    grid-template-columns:105px 1fr;
+    gap:10px;
+    border-bottom:1px dashed #e5eaf0;
+    padding:9px 2px;
+  }
+
+  td:last-child {
+    border-bottom:0;
+  }
+
+  td::before {
+    content:attr(data-label);
+    font-weight:700;
+    color:var(--muted);
+  }
+
+  td:first-child {
+    font-weight:800;
+    font-size:1.05rem;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>민원서비스 빠른 찾기</h1>
+    <p>
+      서비스명과 민원분야를 이용해
+      필요한 민원서비스를 빠르게 찾아보세요.
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 검색/필터 영역 -->
+  <section class="controls" aria-label="민원서비스 검색 조건">
+
+    <div>
+      <label for="keyword">서비스명 검색</label>
+      <input
+        id="keyword"
+        type="search"
+        placeholder="예: 여권, 건축, 주민등록"
+        autocomplete="off">
+    </div>
+
+    <div>
+      <label for="category">민원분야</label>
+
+      <select id="category">
+        <option value="">전체 분야</option>
+        <option value="건축">건축</option>
+        <option value="교통">교통</option>
+        <option value="복지">복지</option>
+        <option value="세무">세무</option>
+        <option value="여권">여권</option>
+        <option value="위생">위생</option>
+        <option value="주민등록">주민등록</option>
+        <option value="환경">환경</option>
+      </select>
+    </div>
+
+  </section>
+
+  <!-- 검색 결과 건수 -->
+  <div class="resultbar" aria-live="polite">
+    <div>
+      검색 결과
+      <strong id="count">22건</strong>
+    </div>
+
+    <div>전체 서비스 22건</div>
+  </div>
+
+  <!-- 서비스 목록 -->
+  <section class="tablebox">
+
+    <table aria-label="민원서비스 목록">
+
+      <thead>
+        <tr>
+          <th>서비스명</th>
+          <th>소관기관</th>
+          <th>민원분야</th>
+          <th>온라인처리</th>
+          <th>처리기한</th>
+          <th>수수료</th>
+        </tr>
+      </thead>
+
+      <tbody id="serviceBody"></tbody>
+
+    </table>
+
+    <div id="empty" class="empty" hidden>
+      조건에 맞는 민원서비스가 없습니다.
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  민원서비스 안내 · 첨부 목록 22건 기준
+</footer>
+
+<script>
+
+/* =========================
+   민원서비스 데이터 22건
+========================= */
+
+const services = [
+
+{
+  "서비스명":"주민등록등본 발급",
+  "소관기관":"주민센터",
+  "민원분야":"주민등록",
+  "온라인처리":"가능",
+  "처리기한일":7,
+  "수수료":500
+},
+
+{
+  "서비스명":"전입신고",
+  "소관기관":"복지정책과",
+  "민원분야":"주민등록",
+  "온라인처리":"불가",
+  "처리기한일":1,
+  "수수료":0
+},
+
+{
+  "서비스명":"인감증명 발급",
+  "소관기관":"복지정책과",
+  "민원분야":"주민등록",
+  "온라인처리":"가능",
+  "처리기한일":1,
+  "수수료":0
+},
+
+{
+  "서비스명":"주민등록증 재발급",
+  "소관기관":"건축과",
+  "민원분야":"주민등록",
+  "온라인처리":"가능",
+  "처리기한일":0,
+  "수수료":0
+},
+
+{
+  "서비스명":"건축물대장 발급",
+  "소관기관":"구청 민원봉사과",
+  "민원분야":"건축",
+  "온라인처리":"불가",
+  "처리기한일":0,
+  "수수료":1000
+},
+
+{
+  "서비스명":"건축허가 신청",
+  "소관기관":"건축과",
+  "민원분야":"건축",
+  "온라인처리":"불가",
+  "처리기한일":1,
+  "수수료":2000
+},
+
+{
+  "서비스명":"용도변경 신고",
+  "소관기관":"시청 민원과",
+  "민원분야":"건축",
+  "온라인처리":"불가",
+  "처리기한일":0,
+  "수수료":0
+},
+
+{
+  "서비스명":"지방세 납부확인서",
+  "소관기관":"건축과",
+  "민원분야":"세무",
+  "온라인처리":"가능",
+  "처리기한일":1,
+  "수수료":1000
+},
+
+{
+  "서비스명":"취득세 신고",
+  "소관기관":"교통행정과",
+  "민원분야":"세무",
+  "온라인처리":"가능",
+  "처리기한일":0,
+  "수수료":0
+},
+
+{
+  "서비스명":"재산세 조회",
+  "소관기관":"교통행정과",
+  "민원분야":"세무",
+  "온라인처리":"가능",
+  "처리기한일":3,
+  "수수료":0
+},
+
+{
+  "서비스명":"기초연금 신청",
+  "소관기관":"건축과",
+  "민원분야":"복지",
+  "온라인처리":"가능",
+  "처리기한일":7,
+  "수수료":500
+},
+
+{
+  "서비스명":"복지급여 조회",
+  "소관기관":"시청 민원과",
+  "민원분야":"복지",
+  "온라인처리":"가능",
+  "처리기한일":14,
+  "수수료":5000
+},
+
+{
+  "서비스명":"장애인 등록",
+  "소관기관":"주민센터",
+  "민원분야":"복지",
+  "온라인처리":"가능",
+  "처리기한일":5,
+  "수수료":0
+},
+
+{
+  "서비스명":"자동차 등록",
+  "소관기관":"주민센터",
+  "민원분야":"교통",
+  "온라인처리":"가능",
+  "처리기한일":1,
+  "수수료":5000
+},
+
+{
+  "서비스명":"운전면허 갱신",
+  "소관기관":"교통행정과",
+  "민원분야":"교통",
+  "온라인처리":"불가",
+  "처리기한일":1,
+  "수수료":0
+},
+
+{
+  "서비스명":"주정차 위반 조회",
+  "소관기관":"주민센터",
+  "민원분야":"교통",
+  "온라인처리":"가능",
+  "처리기한일":7,
+  "수수료":1000
+},
+
+{
+  "서비스명":"배출시설 신고",
+  "소관기관":"주민센터",
+  "민원분야":"환경",
+  "온라인처리":"가능",
+  "처리기한일":1,
+  "수수료":0
+},
+
+{
+  "서비스명":"폐기물 처리 신청",
+  "소관기관":"시청 민원과",
+  "민원분야":"환경",
+  "온라인처리":"가능",
+  "처리기한일":14,
+  "수수료":5000
+},
+
+{
+  "서비스명":"식품영업 신고",
+  "소관기관":"건축과",
+  "민원분야":"위생",
+  "온라인처리":"가능",
+  "처리기한일":3,
+  "수수료":2000
+},
+
+{
+  "서비스명":"위생업소 조회",
+  "소관기관":"시청 민원과",
+  "민원분야":"위생",
+  "온라인처리":"불가",
+  "처리기한일":7,
+  "수수료":500
+},
+
+{
+  "서비스명":"여권 발급 신청",
+  "소관기관":"건축과",
+  "민원분야":"여권",
+  "온라인처리":"가능",
+  "처리기한일":7,
+  "수수료":1000
+},
+
+{
+  "서비스명":"여권 재발급",
+  "소관기관":"교통행정과",
+  "민원분야":"여권",
+  "온라인처리":"가능",
+  "처리기한일":1,
+  "수수료":1000
+}
+
+];
+
+
+/* =========================
+   화면 요소
+========================= */
+
+const keyword =
+  document.getElementById("keyword");
+
+const category =
+  document.getElementById("category");
+
+const body =
+  document.getElementById("serviceBody");
+
+const count =
+  document.getElementById("count");
+
+const empty =
+  document.getElementById("empty");
+
+
+/* =========================
+   HTML 특수문자 처리
+========================= */
+
+function esc(v) {
+
+  return String(v ?? "").replace(
+    /[&<>"']/g,
+    ch => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[ch])
+  );
+
+}
+
+
+/* =========================
+   수수료 표시
+========================= */
+
+function money(v) {
+
+  const n = Number(v);
+
+  if (Number.isFinite(n)) {
+
+    if (n === 0) {
+      return "무료";
+    }
+
+    return n.toLocaleString("ko-KR") + "원";
+  }
+
+  return esc(v);
+}
+
+
+/* =========================
+   처리기한 표시
+========================= */
+
+function days(v) {
+
+  const n = Number(v);
+
+  if (Number.isFinite(n)) {
+
+    if (n === 0) {
+      return "즉시";
+    }
+
+    return n + "일";
+  }
+
+  return esc(v);
+}
+
+
+/* =========================
+   검색 및 필터
+========================= */
+
+function render() {
+
+  const q =
+    keyword.value.trim().toLowerCase();
+
+  const c =
+    category.value;
+
+  /*
+   서비스명 검색 AND 민원분야 필터
+   두 조건이 동시에 적용됨
+  */
+
+  const filtered =
+    services.filter(s =>
+
+      String(s["서비스명"])
+        .toLowerCase()
+        .includes(q)
+
+      &&
+
+      (!c || s["민원분야"] === c)
+
+    );
+
+
+  /* 현재 표시 건수 */
+  count.textContent =
+    filtered.length + "건";
+
+
+  /* 검색 결과 없음 */
+  empty.hidden =
+    filtered.length !== 0;
+
+
+  /* 화면 출력 */
+  body.innerHTML =
+    filtered.map(s => `
+
+      <tr>
+
+        <td data-label="서비스명">
+          ${esc(s["서비스명"])}
+        </td>
+
+        <td data-label="소관기관">
+          ${esc(s["소관기관"])}
+        </td>
+
+        <td data-label="민원분야">
+          <span class="badge">
+            ${esc(s["민원분야"])}
+          </span>
+        </td>
+
+        <td data-label="온라인처리">
+
+          <span class="badge
+            ${s["온라인처리"] === "가능"
+              ? "online"
+              : "offline"}">
+
+            ${esc(s["온라인처리"])}
+
+          </span>
+
+        </td>
+
+        <td data-label="처리기한">
+          ${days(s["처리기한일"])}
+        </td>
+
+        <td data-label="수수료">
+          ${money(s["수수료"])}
+        </td>
+
+      </tr>
+
+    `).join("");
+
+}
+
+
+/* =========================
+   이벤트 연결
+========================= */
+
+/* 검색창 입력 시 즉시 검색 */
+keyword.addEventListener(
+  "input",
+  render
+);
+
+/* 민원분야 변경 시 즉시 필터 */
+category.addEventListener(
+  "change",
+  render
+);
+
+
+/* 최초 22건 표시 */
+render();
+
+</script>
+
+</body>
+</html>
